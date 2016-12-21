@@ -1,0 +1,30 @@
+chunk -> block
+block -> (stat)* //TODO
+stat -> "do" block "end"
+stat -> "while" exp "do" block "end"
+stat -> local IDENT (, IDENT)* [= expr (, expr)*]
+
+exp ::= prefixexp
+exp ::= "nil" | "false" | "true""
+exp ::= LITERAL
+exp ::= functiondef        
+exp ::= exp binop exp
+exp ::= unop exp
+exp ::= "|" exp "|"
+prefixexp ::= STRING
+prefixexp ::= var
+prefixexp ::= functioncall
+prefixexp ::= "(" exp ")"
+prefixexp ::= list_constr | dict_constr
+
+exp ::= var (, var)* "=" expr (, expr)*
+
+var ::= prefixexp "[" exp "]"
+var ::= prefixexp "." IDENT
+var ::= IDENT
+
+functioncall ::= prefixexp "(" [exp (, exp)*] ")"
+
+
+list_constr ::= "[" [exp (, exp)*] "]"
+dict_constr ::= "{" [exp ":" exp (, exp ":" exp)*] "}"
