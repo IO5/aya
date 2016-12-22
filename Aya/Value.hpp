@@ -11,27 +11,32 @@
 namespace aya {
 
 template<typename T, typename... Types>
-constexpr bool is_one_of_v = std::disjunction_v<std::is_same<T, Types>...>;
+using is_one_of = std::disjunction<std::is_same<T, Types>...>;
+template<typename T, typename... Types>
+constexpr bool is_one_of_v = is_one_of<T, Types...>::value;
 
 template <typename T>
 using IntrusivePtr = boost::intrusive_ptr<T>;
-template <typename T>
-void intrusive_ptr_add_ref(const T* ptr) noexcept;
-template <typename T>
-void intrusive_ptr_release(const T* ptr) noexcept;
+//template <typename T>
+//void intrusive_ptr_add_ref(const T* ptr) noexcept;
+//template <typename T>
+//void intrusive_ptr_release(const T* ptr) noexcept;
+
 
 class CFunction;
 class Object;
 
-class Value;
-string_t toString(const Value& val);
-
 using Nil = std::monostate;
 
-template <typename... Types>
-struct ValueBase {
+inline string_t toString(Nil) { return "nil"; }
+inline string_t toString(bool val) { return val ? "true" : "false"; }
+inline string_t toString(int_t val) { return std::to_string(val); }
+// TODO
+inline string_t toString(real_t val) { return std::to_string(val); }
+inline string_t toString(Object&) { return "todo"; }
 
-};
+inline string_t toString(CFunction&) { return "cfunc"; }
+
 
 class Value {
 private:
@@ -48,24 +53,14 @@ private:
     using ObjectPtr = NotNull<IntrusivePtr<Object>>;
 
     template <typename T>
-    struct interface_to_inner { using type = T; };
+    using is_contained_type = is_one_of<T, Nil, bool, int_t, real_t, Object, CFunction>;
     template <typename T>
-    struct interface_to_inner<NotNull<IntrusivePtr<T>>> { using type = T; };
-    template <typename T>
-    using interface_to_inner_t = typename interface_to_inner<T>::type;
+    static constexpr bool is_contained_type_v = is_contained_type::value;
 
-    template <typename T>
-    struct inner_to_interface { using type = T; };
-    template <>
-    struct inner_to_interface<CFunction> { using type = NotNull<IntrusivePtr<CFunction>>; };
-    template <>
-    struct inner_to_interface<Object> { using type = NotNull<IntrusivePtr<Object>>; };
-    template <typename T>
-    using inner_to_interface_t = typename inner_to_interface<T>::type;
 public:
     constexpr Value() {}
     constexpr Value(Nil) {}
-    constexpr Value(bool val)                   : v(val) {} 
+    constexpr Value(bool val)                   : v(val) {}
     constexpr Value(int_t val)                  : v(val) {}
     constexpr Value(real_t val)                 : v(val) {}
 
@@ -83,34 +78,52 @@ public:
     Value(CFunction& val)                       : v(CFunctionPtr(&val)) {}
 
     template <typename T>
-    bool is() const { return std::holds_alternative<interface_to_inner_t<T>>(v); }
-
-    template <typename... Types>
-    bool isOneOf() const {
-        return std::visit([](auto arg) {
-            return is_one_of_v<interface_to_inner_t<decltype(arg)>, Types...>;
-        }, v);
+    constexpr bool is() const {
+        return std::holds_alternative<interface_to_inner_t<T>>(v);
     }
 
-    //bool isNil()       const { return is<Nil>(); }
-    //bool isBool()      const { return is<bool>(); }
-    //bool isInt()       const { return is<int_t>(); }
-    //bool isReal()      const { return is<real_t>(); }
-    //bool isObject()    const { return is<Object>(); }
-    //bool isCFunction() const { return is<CFunction>(); }
+    template <typename... Types>
+    constexpr bool isOneOf() const {
+        static_assert(std::conjunction_v<is_contained_type<Types>...>, "Type not in the variant");
+        return std::visit([](const auto& arg) {
+            // I could remove const&, but I'm unsure if it gives the same semantics
+            return is_one_of_v<
+                inner_to_interface_t<
+                    std::remove_const_t<
+                        std::remove_reference_t<
+                            decltype(arg)
+                >>>, Types...>;
+        }, v);
+    }
+    
+    // TODO I'm not positive that we need const versions at all
+    template <typename T>
+    constexpr T& get() {
+        return unpack(std::get<interface_to_inner_t<T>>(v));
+    }
+    template <typename T>
+    constexpr const T& get() const {
+        return unpack(std::get<interface_to_inner_t<T>>(v));
+    }
 
     template <typename T>
-    T& get() { return std::get<interface_to_inner_t<T>>(v); }
+    constexpr T* getIf() & {
+        auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
+        return ptr ? &unpack(*ptr) : nullptr;
+    }
     template <typename T>
-    const T& get() const { return std::get<interface_to_inner_t<T>>(v); }
+    constexpr const T* getIf() const & {
+        auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
+        return ptr ? &unpack(*ptr) : nullptr;
+    }
 
     template <typename T>
-    T* get_if() & { return std::get_if<interface_to_inner_t<T>>(&v); }
+    T* getIf() && = delete;
     template <typename T>
-    const T* get_if() const & { return std::get_if<interface_to_inner_t<T>>(&v); }
+    const T* getIf() const && = delete;
 
-    //bool operator==(const Value& other) const { return v == other.v; }
-    //bool operator!=(const Value& other) const { return v != other.v; }
+    bool operator==(const Value& other) const { return v == other.v; }
+    bool operator!=(const Value& other) const { return ! (*this == other); }
 
     template <class Visitor>
     constexpr auto visit(Visitor&& vis) {
@@ -122,7 +135,7 @@ public:
         decltype(std::visit(std::forward<Visitor>(vis), vars.v...));
 
     string_t toString() const {
-        return aya::toString(*this);
+        return std::visit([](const auto& arg) { return aya::toString(unpack(arg)); }, v);
     }
 
     //string_t typeToString() {
@@ -139,7 +152,18 @@ public:
     //    }, v);
     //}
 private:
+    template <typename T> struct interface_to_inner { using type = T; };
+    template <>           struct interface_to_inner<CFunction> { using type = CFunctionPtr; };
+    template <>           struct interface_to_inner<Object> { using type = ObjectPtr; };
+    template <typename T> using  interface_to_inner_t = typename interface_to_inner<T>::type;
 
+    template <typename T> struct inner_to_interface { using type = T; };
+    template <typename T> struct inner_to_interface<NotNull<IntrusivePtr<T>>> { using type = T; };
+    template <typename T> using  inner_to_interface_t = typename inner_to_interface<T>::type;
+
+    static Object& unpack(const ObjectPtr& arg) { return *(arg.get().get()); }
+    static CFunction& unpack(const CFunctionPtr& arg) { return *(arg.get().get()); }
+    template <typename T> static T& unpack(T& arg) { return arg; }
 };
 
 template <class Visitor, class... Variants>
@@ -147,26 +171,6 @@ constexpr auto visit(Visitor&& vis, Variants&&... vars) {
     return std::visit(std::forward<Visitor>(vis), vars.v...);
 }
 
-string_t toString(Nil) { return "nil"; }
-string_t toString(bool val) { return val ? "true" : "false"; }
-string_t toString(int_t val) { return std::to_string(val); }
-// TODO
-string_t toString(real_t val) { return std::to_string(val); }
-string_t toString(Object&) { return "todo"; }
-
-string_t toString(CFunction&) { return "cfunc"; }
-//string_t toString(void* val) { return std::to_string(reinterpret_cast<intptr_t>(val)); }
-
-#include <boost/hana/functional/overload.hpp>
-
-string_t toString(const Value& val) {
-    return "";
-    //auto visitor = boost::hana::overload(
-    //    [](CFunctionPtr ptr) { return aya::toString(ptr.get().get()); },
-    //    [](auto arg) { return aya::toString(arg); }
-    //);
-    //return visit(visitor, val);
-}
 
 //template <typename T> string_t typeToString();
 //

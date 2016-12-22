@@ -169,8 +169,8 @@ struct UnpackStackImpl;
 
 template <typename Head, typename... Tail>
 struct UnpackStackImpl<Head, Tail...> {
-    static auto unpackStack(gsl::span<Value>& stack) {
-        if (Head* val = stack[0].get_if<Head>()) {
+    static auto unpackStack(const gsl::span<Value>& stack) {
+        if (Head* val = stack[0].getIf<Head>()) {
             return std::tuple_cat(
                 std::tuple<Head>(*val),
                 UnpackStackImpl<Tail...>::unpackStack(stack.subspan(1, stack.size() - 1))
@@ -183,13 +183,13 @@ struct UnpackStackImpl<Head, Tail...> {
 
 template <>
 struct UnpackStackImpl<> {
-    static auto unpackStack(gsl::span<Value>& stack) {
+    static auto unpackStack(const gsl::span<Value>&) {
         return std::tuple<>();
     }
 };
 
 template <typename... Types>
-auto unpackStack(gsl::span<Value>& stack) {
+auto unpackStack(const gsl::span<Value>& stack) {
     return UnpackStackImpl<Types...>::unpackStack(stack);
 }
 
@@ -211,18 +211,22 @@ NotNull<CFunction*> makeBind(Func&& func) {
 
 }
 
-void foo(aya::int_t i, double d, bool b) {
+void foo(aya::int_t, double, bool) {
     std::cout << "hi\n";
 }
 
 int main(int argc, char** argv) 
 {
+    (void)argc; (void)argv;
     using namespace aya;
     //testing::InitGoogleTest(&argc, argv); 
     //return RUN_ALL_TESTS();
-    aya::Value a = 2, b = 0.5;
-    Value c = aya::makeBind<void, aya::int_t, double, bool>(&foo);
-    std::cout << c.isOneOf<CFunction>() << '\n';
+    const aya::Value a = 2, b = 0.5;
+    const Value c = aya::makeBind<void, aya::int_t, double, bool>(&foo);
+    auto* dupa = c.getIf<CFunction>();
+    std::array<Value, 3> stack{2,0.0,true};
+    (*dupa)(gsl::span<Value>{stack});
+    //auto dupa = a.isOneOf<Nil>();
     //aya::Value c = aya::binOp([](auto&& lhs, auto&& rhs) { return rhs + lhs; }, a, b);
     //aya::Value d = aya::Nil();
     //std::cout << toString(d) << '\n';
