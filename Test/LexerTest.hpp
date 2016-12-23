@@ -1,5 +1,4 @@
-#define GTEST_HAS_TR1_TUPLE 0
-#include "gtest/gtest.h"
+#pragma once
 
 #include "Lexer.hpp"
 #include "Exception.hpp"
@@ -127,47 +126,3 @@ TEST(badTokens, lexerTest) {
     EXPECT_THROW(Lexer(":").lex(), SyntaxError);
     EXPECT_THROW(Lexer("\xff").lex(), SyntaxError);
 }
-
-int main(int argc, char** argv) 
-{
-    testing::InitGoogleTest(&argc, argv); 
-    return RUN_ALL_TESTS();
-}
-
-/*
-int main2(int argc, const char* argv[]) {
-    if (argc != 2)
-        return -1;
-
-    ifstream inputFile(argv[1]);
-    if (!inputFile.good())
-        return -1;
-
-    vector<char> source;
-    copy(istreambuf_iterator<char>(inputFile), istreambuf_iterator<char>(), back_inserter(source));
-    source.push_back('\0');
-
-    aya::Lexer lexer(source);
-
-    try {
-        aya::Token current = lexer.lex();
-        while (current != aya::TK::EOS) {
-            cout << aya::toString(current);
-            if (current == aya::TK::INT) {
-                cout << '(' << lexer.getSemInfo().getInt() << ')';
-            } else if (current == aya::TK::REAL) {
-                cout << '(' << lexer.getSemInfo().getReal() << ')';
-            }
-            cout << ' ';
-            current = lexer.lex();
-        }
-    } catch (aya::SyntaxError& err) {
-        cout << '\n';
-        cerr << err.what() << " in " << err.inputName << ':' << err.line << '\n';
-        cerr << err.context <<'\n';
-    }
-
-    cout << '\n';
-    return 0;
-}
-*/
