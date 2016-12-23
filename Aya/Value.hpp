@@ -58,7 +58,7 @@ public:
 
     template <typename T>
     constexpr bool is() const {
-        static_cast(is_contained_type_v<T>, "No such type in variant")
+        static_assert(is_contained_type_v<T>, "No such type in variant");
         return std::holds_alternative<interface_to_inner_t<T>>(v);
     }
 
