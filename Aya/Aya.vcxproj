@@ -142,12 +142,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast\ast_node.hpp" />
+    <ClInclude Include="CFunction.hpp" />
     <ClInclude Include="Exception.hpp" />
     <ClInclude Include="Lexer.hpp" />
     <ClInclude Include="ManagedMemory.hpp" />
+    <ClInclude Include="Object.hpp" />
     <ClInclude Include="Parser.hpp" />
     <ClInclude Include="Token.hpp" />
+    <ClInclude Include="ToString.hpp" />
     <ClInclude Include="Types.hpp" />
+    <ClInclude Include="Utils.hpp" />
     <ClInclude Include="Value.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -131,6 +131,9 @@ TEST(badTokens, lexerTest) {
 }
 */
 #include "Value.hpp"
+#include "CFunction.hpp"
+#include "Object.hpp"
+#include "ToString.hpp"
 
 #include <functional>
 #include <vector>
@@ -222,6 +225,7 @@ int main(int argc, char** argv)
     //testing::InitGoogleTest(&argc, argv); 
     //return RUN_ALL_TESTS();
     const aya::Value a = 2, b = 0.5;
+    std::cout << b.typeToString() << '\n';
     const Value c = aya::makeBind<void, aya::int_t, double, bool>(&foo);
     auto* dupa = c.getIf<CFunction>();
     std::array<Value, 3> stack{2,0.0,true};

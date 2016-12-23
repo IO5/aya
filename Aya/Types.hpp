@@ -2,6 +2,7 @@
 
 #include <gsl>
 #include <string>
+#include <variant>
 
 namespace aya {
 
@@ -11,7 +12,6 @@ using char_t = char;
 using string_view = gsl::basic_string_span<const char_t>;
 using string_t = std::basic_string<char_t>;
 
-template <typename T>
-using NotNull = gsl::not_null<T>;
+using Nil = std::monostate;
 
 }
