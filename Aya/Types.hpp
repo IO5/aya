@@ -6,7 +6,7 @@
 
 namespace aya {
 
-using int_t = intptr_t;
+using int_t = int64_t;
 using real_t = double;
 using char_t = char;
 using string_view = gsl::basic_string_span<const char_t>;

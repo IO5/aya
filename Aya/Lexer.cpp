@@ -225,7 +225,7 @@ Token Lexer::readNumeral() {
                 semInfo.val = readReal(start);
                 return TK::REAL;
             } else {
-                semInfo.val = 0u;
+                semInfo.val = uint_t(0u);
                 return TK::INT;
             }
         // 0e" "0E"

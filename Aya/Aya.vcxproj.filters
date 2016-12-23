@@ -16,58 +16,67 @@
     <Filter Include="ast">
       <UniqueIdentifier>{610b2885-42b5-49e2-99d3-199948a95da4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Parser">
+      <UniqueIdentifier>{332644b5-ce65-4a42-9a67-6b560d8f27c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{69170e11-49e6-4b69-a74c-8667b2997020}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{36eecdae-2da5-4422-ac52-db8e41f4b5fd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
     <Text Include="grammar.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ManagedMemory.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Token.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Lexer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Exception.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Parser.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ast\ast_node.hpp">
       <Filter>ast</Filter>
-    </ClInclude>
-    <ClInclude Include="Types.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Value.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils.hpp">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CFunction.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Lexer.hpp">
+      <Filter>Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="Token.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Parser.hpp">
+      <Filter>Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="Value.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="Object.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ManagedMemory.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Exception.hpp">
+      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="ToString.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.hpp">
+      <Filter>Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Lexer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Parser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Token.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Lexer.cpp">
+      <Filter>Parser</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

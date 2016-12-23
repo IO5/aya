@@ -28,8 +28,8 @@ public:
     
     struct SemInfo {
         string_view getText() { return std::get<string_view>(val); }
-        uint_t       getInt()  { return std::get<uint_t>(val); }
-        real_t       getReal() { return std::get<real_t>(val); }
+        uint_t      getInt()  { return std::get<uint_t>(val); }
+        real_t      getReal() { return std::get<real_t>(val); }
     private:
         std::variant<std::monostate, string_view, uint_t, real_t> val;
         friend Lexer;

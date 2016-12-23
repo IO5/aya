@@ -4,6 +4,7 @@
 #include "Utils.hpp"
 
 #include <variant>
+#include <type_traits>
 
 namespace aya {
 
@@ -31,13 +32,15 @@ private:
     template <typename T>
     using is_contained_type = is_one_of<T, Nil, bool, int_t, real_t, Object, CFunction>;
     template <typename T>
-    static constexpr bool is_contained_type_v = is_contained_type::value;
+    static constexpr bool is_contained_type_v = is_contained_type<T>::value;
 
 public:
     constexpr Value() {}
     constexpr Value(Nil) {}
     constexpr Value(bool val)                   : v(val) {}
     constexpr Value(int_t val)                  : v(val) {}
+    template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+    constexpr Value(T val)                      : v(int_t(val)) {}
     constexpr Value(real_t val)                 : v(val) {}
 
     // all that boilerplate is bool's fault
@@ -55,12 +58,13 @@ public:
 
     template <typename T>
     constexpr bool is() const {
+        static_cast(is_contained_type_v<T>, "No such type in variant")
         return std::holds_alternative<interface_to_inner_t<T>>(v);
     }
 
     template <typename... Types>
     constexpr bool isOneOf() const {
-        static_assert(std::conjunction_v<is_contained_type<Types>...>, "Type not in the variant");
+        static_assert(std::conjunction_v<is_contained_type<Types>...>, "No such type in variant");
         return std::visit([](const auto& arg) {
             return is_one_of_v<
                 inner_to_interface_t<
@@ -72,20 +76,24 @@ public:
     
     template <typename T>
     constexpr T& get() {
+        static_assert(is_contained_type_v<T>, "No such type in variant");
         return unpack(std::get<interface_to_inner_t<T>>(v));
     }
     template <typename T>
     constexpr const T& get() const {
+        static_assert(is_contained_type_v<T>, "No such type in variant");
         return unpack(std::get<interface_to_inner_t<T>>(v));
     }
 
     template <typename T>
     constexpr T* getIf() & {
+        static_assert(is_contained_type_v<T>, "No such type in variant");
         auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
         return ptr ? &unpack(*ptr) : nullptr;
     }
     template <typename T>
     constexpr const T* getIf() const & {
+        static_assert(is_contained_type_v<T>, "No such type in variant");
         auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
         return ptr ? &unpack(*ptr) : nullptr;
     }

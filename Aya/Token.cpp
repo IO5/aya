@@ -3,7 +3,7 @@
 #ifdef _DEBUG
 namespace aya {
 
-const char* toString(Token token) {
+string_view toString(Token token) {
     static char res[2] = {};
     switch (token) {
     case TK::EOS:    return "EOS";

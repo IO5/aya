@@ -160,58 +160,6 @@ struct BinOpImpl {
     const Op& op;
 };
 
-//template <typename Op, typename... SelectedTypes>
-//Value binOp(Value lhs, Value rhs, const Op& op) {
-//    std::visit([](auto&& arg) {
-//        throw 1;
-//    }, lhs.v);
-//}
-
-template <typename... Types>
-struct UnpackStackImpl;
-
-template <typename Head, typename... Tail>
-struct UnpackStackImpl<Head, Tail...> {
-    static auto unpackStack(const gsl::span<Value>& stack) {
-        if (Head* val = stack[0].getIf<Head>()) {
-            return std::tuple_cat(
-                std::tuple<Head>(*val),
-                UnpackStackImpl<Tail...>::unpackStack(stack.subspan(1, stack.size() - 1))
-            );
-        } else {
-            throw 1;
-        }
-    }
-};
-
-template <>
-struct UnpackStackImpl<> {
-    static auto unpackStack(const gsl::span<Value>&) {
-        return std::tuple<>();
-    }
-};
-
-template <typename... Types>
-auto unpackStack(const gsl::span<Value>& stack) {
-    return UnpackStackImpl<Types...>::unpackStack(stack);
-}
-
-//std::function<int(std::vector<aya::Value>&)>
-template <typename Ret, typename... Args, typename Func>
-NotNull<CFunction*> makeBind(Func&& func) {
-    return new CFunction([f = std::forward<Func>(func)](gsl::span<Value>& stack) {
-        assert(stack.size() == sizeof...(Args));
-        auto args = unpackStack<Args...>(stack);
-        //stack[0].get
-        try {
-            std::apply(f, args);
-        } catch (...) {
-
-        }
-        return 1;
-    });
-}
-
 }
 
 void foo(aya::int_t, double, bool) {
@@ -224,11 +172,11 @@ int main(int argc, char** argv)
     using namespace aya;
     //testing::InitGoogleTest(&argc, argv); 
     //return RUN_ALL_TESTS();
-    const aya::Value a = 2, b = 0.5;
+    aya::Value a = 2u, b = 0.5;
     std::cout << b.typeToString() << '\n';
     const Value c = aya::makeBind<void, aya::int_t, double, bool>(&foo);
     auto* dupa = c.getIf<CFunction>();
-    std::array<Value, 3> stack{2,0.0,true};
+    std::array<Value, 3> stack{2ll,0.0,true};
     (*dupa)(gsl::span<Value>{stack});
     //auto dupa = a.isOneOf<Nil>();
     //aya::Value c = aya::binOp([](auto&& lhs, auto&& rhs) { return rhs + lhs; }, a, b);

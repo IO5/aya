@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Types.hpp"
+
 namespace aya {
 
 enum class Token : int {
@@ -34,7 +36,7 @@ constexpr Token operator ""_tk(char ch) {
 }
 
 #ifdef _DEBUG
-const char* toString(Token token);
+string_view toString(Token token);
 #endif
 
 }
