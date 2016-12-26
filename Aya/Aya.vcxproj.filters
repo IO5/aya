@@ -25,9 +25,11 @@
     <Filter Include="Utils">
       <UniqueIdentifier>{36eecdae-2da5-4422-ac52-db8e41f4b5fd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Alloc">
+      <UniqueIdentifier>{baae60aa-160a-4066-9ab1-5c5715a3b370}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
     <Text Include="grammar.txt" />
   </ItemGroup>
   <ItemGroup>
@@ -49,9 +51,6 @@
     <ClInclude Include="Object.hpp">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="ManagedMemory.hpp">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Exception.hpp">
       <Filter>Core</Filter>
     </ClInclude>
@@ -67,6 +66,15 @@
     <ClInclude Include="Value.hpp">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="GarbageCollector.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Allocator.hpp">
+      <Filter>Alloc</Filter>
+    </ClInclude>
+    <ClInclude Include="GCManagedMemory.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Parser.cpp">
@@ -77,6 +85,12 @@
     </ClCompile>
     <ClCompile Include="Lexer.cpp">
       <Filter>Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="VirtualMachine.hpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Core</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

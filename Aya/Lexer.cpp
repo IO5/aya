@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <limits>
 
-//#include <boost\lexical_cast.hpp>
+#include <boost\lexical_cast.hpp>
 
 #include "Exception.hpp"
 
@@ -225,7 +225,7 @@ Token Lexer::readNumeral() {
                 semInfo.val = readReal(start);
                 return TK::REAL;
             } else {
-                semInfo.val = uint_t(0u);
+                semInfo.val = uint_t(0);
                 return TK::INT;
             }
         // 0e" "0E"
@@ -309,8 +309,7 @@ real_t Lexer::readReal(const char_t* start) {
 
     const char* end = currentPtr;
 
-    //return boost::lexical_cast<real_t>(start, end - start);
-    return 0;
+    return boost::lexical_cast<real_t>(start, end - start);
 }
 
 constexpr int64_t intReprOfShortStr(const char* str, int i) {

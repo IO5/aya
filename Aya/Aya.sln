@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Aya", "Aya.vcxproj", "{CB3B
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "..\Sandbox\Sandbox.vcxproj", "{52AD8788-5B63-4281-9786-0B12EEEDC4E0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "..\Test\Test.vcxproj", "{D039626C-42D3-464C-B706-C1AA06885B50}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,11 @@ Global
 		{52AD8788-5B63-4281-9786-0B12EEEDC4E0}.Release|x64.Build.0 = Release|x64
 		{52AD8788-5B63-4281-9786-0B12EEEDC4E0}.Release|x86.ActiveCfg = Release|Win32
 		{52AD8788-5B63-4281-9786-0B12EEEDC4E0}.Release|x86.Build.0 = Release|Win32
+		{D039626C-42D3-464C-B706-C1AA06885B50}.Debug|x64.ActiveCfg = Debug|x64
+		{D039626C-42D3-464C-B706-C1AA06885B50}.Debug|x86.ActiveCfg = Release|Win32
+		{D039626C-42D3-464C-B706-C1AA06885B50}.Release|x64.ActiveCfg = Release|x64
+		{D039626C-42D3-464C-B706-C1AA06885B50}.Release|x86.ActiveCfg = Release|Win32
+		{D039626C-42D3-464C-B706-C1AA06885B50}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

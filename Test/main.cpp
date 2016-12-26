@@ -12,7 +12,7 @@ using namespace std;
 TEST(inputBufferSanity, lexerTest) {
     EXPECT_THROW(Lexer lexer(nullptr), Exception);
     EXPECT_THROW(Lexer lexer({}), Exception);
-    EXPECT_THROW(Lexer lexer(gsl::span<const char_t>{"", int(0)}), Exception);
+    EXPECT_THROW(Lexer lexer(gsl::span<const char_t>{"", std::ptrdiff_t(0)}), Exception);
     EXPECT_THROW(Lexer lexer(gsl::span<const char_t>{"abc", 3}), Exception);
 
     EXPECT_NO_THROW(Lexer lexer(""));
