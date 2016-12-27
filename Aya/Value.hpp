@@ -23,10 +23,10 @@ private:
         int_t,
         real_t,
         NotNull<IntrusivePtr<Object>>,
-        NotNull<IntrusivePtr<CFunction>>
+        NotNull<CFunction*>
     > v;
 
-    using CFunctionPtr = NotNull<IntrusivePtr<CFunction>>;
+    using CFunctionPtr = NotNull<CFunction*>;
     using ObjectPtr = NotNull<IntrusivePtr<Object>>;
 
     template <typename T>
@@ -50,9 +50,7 @@ public:
     Value(Object* val)                          : v(ObjectPtr(val)) {}
     Value(Object& val)                          : v(ObjectPtr(&val)) {}
 
-    Value(NotNull<IntrusivePtr<CFunction>> val) : v(val) {}
-    Value(NotNull<CFunction*> val)              : v(CFunctionPtr(val)) {}
-    Value(IntrusivePtr<CFunction> val)          : v(CFunctionPtr(val)) {}
+    Value(NotNull<CFunction*> val)              : v(val) {}
     Value(CFunction* val)                       : v(CFunctionPtr(val)) {}
     Value(CFunction& val)                       : v(CFunctionPtr(&val)) {}
 
@@ -115,10 +113,9 @@ public:
     }
     template <class Visitor>
     constexpr auto visit(Visitor&& vis) const {
-        auto visitor = [v = std::forward<Visitor>(vis)](auto&& arg) {
-            return v(unpack(arg));
-        };
-        return std::visit(visitor, v);
+        return std::visit([visitor = std::forward<Visitor>(vis)](auto&& arg) {
+            return visitor(unpack(arg));
+        }, v);
     }
 
     string_t toString() const {
@@ -130,16 +127,17 @@ public:
 
 private:
     template <typename T> struct interface_to_inner { using type = T; };
-    template <>           struct interface_to_inner<CFunction> { using type = CFunctionPtr; };
     template <>           struct interface_to_inner<Object> { using type = ObjectPtr; };
+    template <>           struct interface_to_inner<CFunction> { using type = CFunctionPtr; };
     template <typename T> using  interface_to_inner_t = typename interface_to_inner<T>::type;
 
     template <typename T> struct inner_to_interface { using type = T; };
-    template <typename T> struct inner_to_interface<NotNull<IntrusivePtr<T>>> { using type = T; };
+    template <>           struct inner_to_interface<ObjectPtr> { using type = Object; };
+    template <>           struct inner_to_interface<CFunctionPtr> { using type = CFunction; };
     template <typename T> using  inner_to_interface_t = typename inner_to_interface<T>::type;
 
     static Object& unpack(const ObjectPtr& arg) { return *(arg.get().get()); }
-    static CFunction& unpack(const CFunctionPtr& arg) { return *(arg.get().get()); }
+    static CFunction& unpack(const CFunctionPtr& arg) { return *(arg.get()); }
     template <typename T> static T& unpack(T& arg) { return arg; }
 };
 

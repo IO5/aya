@@ -205,6 +205,7 @@
     <ClInclude Include="Allocator.hpp" />
     <ClInclude Include="ast\ast_node.hpp" />
     <ClInclude Include="CFunction.hpp" />
+    <ClInclude Include="CustomAllocatedMemory.hpp" />
     <ClInclude Include="Exception.hpp" />
     <ClInclude Include="GarbageCollector.hpp" />
     <ClInclude Include="Lexer.hpp" />

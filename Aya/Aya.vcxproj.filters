@@ -75,6 +75,9 @@
     <ClInclude Include="GCManagedMemory.hpp">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="CustomAllocatedMemory.hpp">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Parser.cpp">
