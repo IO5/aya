@@ -5,7 +5,7 @@
 class AstNode {
 public:
     ~AstNode() {}
-    virtual void genCode() = 0;
+    virtual void genCode() =0;
 };
 
 class ExprNode : public AstNode {

@@ -12,10 +12,10 @@ public:
     template <typename T, typename... Args>
     static T* create(Args... args) {
         void* ptr = alloc(sizeof(T));
-        return new (ptr) T(args...);
+        return ::new (ptr) T(args...);
     }
     template <typename T>
-    static void destroy(const T* ptr, size_t size) {
+    static void destroy(const T* ptr, size_t size = sizeof(T)) {
         ptr->~T();
         free((void*)ptr, size);
     }
@@ -34,7 +34,7 @@ public:
     }
 
     void* operator new     (size_t) = delete;
-    void* operator new[](size_t) = delete;
+    void* operator new[]   (size_t) = delete;
     void  operator delete  (void*) = delete;
     void  operator delete[](void*) = delete;
 

@@ -1,4 +1,7 @@
 #pragma once
+
+#include "Token.hpp"
+
 #include <algorithm>
 
 namespace aya {

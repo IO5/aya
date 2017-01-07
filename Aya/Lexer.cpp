@@ -19,7 +19,7 @@ constexpr char_t operator ""_(char ch) {
 Lexer::Lexer(gsl::span<const char_t> inputBuffer_, string_view inputName_) :
     inputBuffer(inputBuffer_),
     currentPtr(inputBuffer_.data()), 
-    inputName(gsl::to_string(inputName_)),
+    inputName(inputName_),
     line(1),
     column(1) {
     if (inputBuffer.size() == 0)
@@ -50,24 +50,25 @@ inline bool Lexer::eat(char_t ch) {
     return false;
 }
 
-string_view Lexer::getContext(const char_t* ptr) {
-    assert(ptr >= inputBuffer.data() && ptr < inputBuffer.data() + inputBuffer.size());
-    const char_t* lineStart = ptr;
-    const char_t* lineEnd = ptr;
-    while (*lineStart != '\n' && *lineStart != '\r' && lineStart > inputBuffer.data())
-        --lineStart;
-    while (*lineEnd != '\r' && *lineEnd != '\n' && *lineEnd != '\0')
-        ++lineEnd;
-
-    constexpr auto MAX_LEN = 80;
-    if (lineEnd - lineStart > MAX_LEN) {
-        return nullptr;
-    }
-    return {lineStart, lineEnd};
-}
+//string_view Lexer::getContext(const char_t* ptr) {
+//    assert(ptr >= inputBuffer.data() && ptr < inputBuffer.data() + inputBuffer.size());
+//    const char_t* lineStart = ptr;
+//    const char_t* lineEnd = ptr;
+//    while (*lineStart != '\n' && *lineStart != '\r' && lineStart > inputBuffer.data())
+//        --lineStart;
+//    while (*lineEnd != '\r' && *lineEnd != '\n' && *lineEnd != '\0')
+//        ++lineEnd;
+//
+//    constexpr auto MAX_LEN = 80;
+//    if (lineEnd - lineStart > MAX_LEN) {
+//        return nullptr;
+//    }
+//    return {lineStart, lineEnd};
+//}
 
 inline void Lexer::error(string_view msg) {
-    throw SyntaxError(msg, inputName, line, column, getContext(currentPtr));
+    //throw SyntaxError(msg, inputName, line, column, getContext(currentPtr));
+    throw SyntaxError(msg, inputName, line, column);
 }
 
 inline bool isNewLine(char_t ch) {
@@ -99,7 +100,7 @@ inline bool isAlphaNumOr_(char_t ch) {
     return isAlphaOr_(ch) || isDigit(ch);
 }
 
-Token Lexer::lex() {
+Token::Type Lexer::lex() {
     // spaces are common inbetween tokens
     while (current() == ' ')
         next();
@@ -186,7 +187,7 @@ Token Lexer::lex() {
         case ')': case '{': case '}': case '[':
         case ']': case ',':
             next();
-            return static_cast<Token>(ch);
+            return static_cast<Token::Type>(ch);
 
         default:
             if (isAlphaOr_(ch)) {
@@ -214,7 +215,7 @@ inline bool isExponent(char_t ch) {
     return ch == 'e' || ch == 'E';
 }
 
-Token Lexer::readNumeral() {
+Token::Type Lexer::readNumeral() {
     assert(isDigit(current()));
 
     const char* start = currentPtr;
@@ -222,33 +223,33 @@ Token Lexer::readNumeral() {
         // "0."
         if (current() == '.') {
             if (isDigit(peekNext())) {
-                semInfo.val = readReal(start);
+                semInfo = readReal(start);
                 return TK::REAL;
             } else {
-                semInfo.val = uint_t(0);
+                semInfo = uint_t(0);
                 return TK::INT;
             }
         // 0e" "0E"
         } else if (isExponent(current())) {
-            semInfo.val = readReal(start);
+            semInfo = readReal(start);
             return TK::REAL;
         // octal literal
         } else if (eat('x') || eat('X')) {
             if (!isDigit<16>(current()))
                 error("malformed hexadecimal literal");
-            semInfo.val = readInteger<16>();
+            semInfo = readInteger<16>();
             return TK::INT;
         // hexadecimal literal
         } else {
-            semInfo.val = readInteger<8>();
+            semInfo = readInteger<8>();
             return TK::INT;
         }
     //decimal
     } else {
-        semInfo.val = readInteger<10>();
+        semInfo = readInteger<10>();
 
         if (current() == '.' || isExponent(current())) {
-            semInfo.val = readReal(start);
+            semInfo = readReal(start);
             return TK::REAL;
         } else {
             return TK::INT;
@@ -316,11 +317,11 @@ constexpr int64_t intReprOfShortStr(const char* str, int i) {
     return (i == 0) ? 0 : *str + (intReprOfShortStr(str + 1, i - 1) << 8);
 }
 
-Token Lexer::readIdentOrKeyword() {
+Token::Type Lexer::readIdentOrKeyword() {
     assert(isAlphaOr_(current()));
 
     const char* start = currentPtr;
-    
+
     int64_t intRepr = 0;
     do {
         intRepr <<= 8;
@@ -335,8 +336,8 @@ Token Lexer::readIdentOrKeyword() {
     if (current() == '!' || current() == '?')
         next();
 
-    const char* end = currentPtr;
-    semInfo.val = gsl::span<const char_t>{start, end};
+    size_t len = currentPtr - start;
+    semInfo = string_view{start, len};
 
     return TK::IDENT; //TODO
 }
@@ -399,7 +400,7 @@ void Lexer::readString() {
         next();
         // empty string
         if (current() != closingChar) {
-            semInfo.val = string_view{};
+            semInfo = string_view{};
             return;
         }
         // long string
@@ -428,7 +429,7 @@ void Lexer::readString() {
 
     // we can just point to the input buffer
     if (noEscapeSeq) {
-        semInfo.val = string_view{start, currentPtr};
+        semInfo = string_view{start, size_t(currentPtr - start)};
     // there is stuff to escape, DAMN YOU USER
     } else {
         if (longString)

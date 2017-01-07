@@ -203,7 +203,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Allocator.hpp" />
-    <ClInclude Include="ast\ast_node.hpp" />
+    <ClInclude Include="ast\AstNode.hpp" />
     <ClInclude Include="CFunction.hpp" />
     <ClInclude Include="CustomAllocatedMemory.hpp" />
     <ClInclude Include="Exception.hpp" />

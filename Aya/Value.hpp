@@ -71,7 +71,7 @@ public:
                 >>, Types...>;
         }, v);
     }
-    
+
     template <typename T>
     constexpr T& get() {
         static_assert(is_contained_type_v<T>, "No such type in variant");

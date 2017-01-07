@@ -18,10 +18,8 @@ void mark(const Value& val);
 class Object : public CustomAllocatedMemory, public GCManagedMemory {
 public:
     ~Object() {
-        if (instanceVars) {
-
-        }
-
+        if (instanceVars)
+            allocator.destroy(instanceVars);
     }
     virtual const string_view* getIfString() { return nullptr; }
     // getIfList

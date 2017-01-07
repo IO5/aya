@@ -1,9 +1,9 @@
+#ifdef _DEBUG
 #include "Token.hpp"
 
-#ifdef _DEBUG
 namespace aya {
 
-string_view toString(Token token) {
+string_view toString(Token::Type token) {
     static char res[2] = {};
     switch (token) {
     case TK::EOS:    return "EOS";
@@ -49,7 +49,7 @@ string_view toString(Token token) {
         return res;
 
     default:
-        return "UNKOWN";
+        return "UNKNOWN";
     }
 }
 

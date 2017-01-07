@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="ast">
-      <UniqueIdentifier>{610b2885-42b5-49e2-99d3-199948a95da4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Parser">
       <UniqueIdentifier>{332644b5-ce65-4a42-9a67-6b560d8f27c6}</UniqueIdentifier>
     </Filter>
@@ -28,22 +25,19 @@
     <Filter Include="Alloc">
       <UniqueIdentifier>{baae60aa-160a-4066-9ab1-5c5715a3b370}</UniqueIdentifier>
     </Filter>
+    <Filter Include="AST">
+      <UniqueIdentifier>{610b2885-42b5-49e2-99d3-199948a95da4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="grammar.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ast\ast_node.hpp">
-      <Filter>ast</Filter>
-    </ClInclude>
     <ClInclude Include="CFunction.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Lexer.hpp">
       <Filter>Parser</Filter>
-    </ClInclude>
-    <ClInclude Include="Token.hpp">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Parser.hpp">
       <Filter>Parser</Filter>
@@ -78,14 +72,14 @@
     <ClInclude Include="CustomAllocatedMemory.hpp">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="ast\AstNode.hpp">
+      <Filter>AST</Filter>
+    </ClInclude>
+    <ClInclude Include="Token.hpp">
+      <Filter>Parser</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Parser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Token.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Lexer.cpp">
       <Filter>Parser</Filter>
     </ClCompile>
@@ -94,6 +88,12 @@
     </ClCompile>
     <ClCompile Include="Object.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Parser.cpp">
+      <Filter>Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="Token.cpp">
+      <Filter>Parser</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
