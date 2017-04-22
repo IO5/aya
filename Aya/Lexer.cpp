@@ -275,8 +275,9 @@ uint_t Lexer::readInteger() {
     while (isDigit<base>(current())) {
         uint_t oldRes = res;
         res = base * res + charDigitToInt<base>(current());
-        // wrap around TODO check in parser if it fits into signed version
-        if (oldRes > res)
+		constexpr auto Max_Int = static_cast<uint_t>(std::numeric_limits<int_t>::max());
+        // wrap around or number bigger than max_int + 1 (it can be actually min_int if is's preceded by unary minus)
+        if (oldRes != res / base || res - 1 > Max_Int)
             error("integer constant too big");
         next();
     }
@@ -313,10 +314,6 @@ real_t Lexer::readReal(const char_t* start) {
     return boost::lexical_cast<real_t>(start, end - start);
 }
 
-constexpr int64_t intReprOfShortStr(const char* str, int i) {
-    return (i == 0) ? 0 : *str + (intReprOfShortStr(str + 1, i - 1) << 8);
-}
-
 Token::Type Lexer::readIdentOrKeyword() {
     assert(isAlphaOr_(current()));
 
@@ -327,8 +324,6 @@ Token::Type Lexer::readIdentOrKeyword() {
         intRepr <<= 8;
         intRepr |= current();
     } while (isAlphaOr_(next()));
-
-    constexpr auto beginInt = intReprOfShortStr("begin", 5);
 
     // TODO keyword check
 
@@ -441,12 +436,12 @@ void Lexer::readString() {
 }
 
 template<class ClosingPred>
-bool Lexer::readStringNoEscapeSeq(ClosingPred pred) {
+inline bool Lexer::readStringNoEscapeSeq(ClosingPred pred) {
     while (pred()) {
         if (current() == '\0' || isNewLine(current()))
             error("unterminated string literal");
         if (current() == '\\')
-            return false;;
+            return false;
         next();
     }
     return true;
@@ -464,14 +459,14 @@ void Lexer::readStringWithEscapeSeq(const char_t* start, ClosingPred pred) {
         if (current() == '\0' || isNewLine(current()))
             error("unterminated string literal");
         if (current() == '\\') {
-            tmpBuffer.reserve(tmpBuffer.size() + currentPtr - start);
             tmpBuffer.insert(tmpBuffer.end(), start, currentPtr);
             unescape();
             start = currentPtr;
         }
     }
-    tmpBuffer.reserve(tmpBuffer.size() + currentPtr - start);
     tmpBuffer.insert(tmpBuffer.end(), start, currentPtr);
+
+    semInfo = string_view{tmpBuffer.data(), tmpBuffer.size()};
 }
 
 }

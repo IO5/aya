@@ -1,10 +1,15 @@
 #pragma once
 
 #include "Token.hpp"
+#include "Utils.hpp"
+#include "ast/AstNode.hpp"
 
 #include <algorithm>
+#include <memory>
+#include <optional>
 
 namespace aya {
+
 class AstNode;
 
 class Parser {
@@ -12,9 +17,17 @@ public:
     Parser();
     ~Parser();
 
-    AstNode* parse();
+    unique_ptr<AstNode> parse();
 private:
-    typedef std::pair<bool, AstNode*> ParseRes;
+    template <class T, typename... Args>
+    unique_ptr<T> make(Args... args);
+
+    Token& next();
+    
+    unique_ptr<BlockNode> block();
+    unique_ptr<StatementNode> statement();
+
+    Token current;
 };
 
 }

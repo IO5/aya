@@ -223,6 +223,7 @@
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Token.cpp" />
+    <ClCompile Include="Trie.cpp" />
     <ClCompile Include="VirtualMachine.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

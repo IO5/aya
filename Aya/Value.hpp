@@ -22,12 +22,12 @@ private:
         bool,
         int_t,
         real_t,
-        NotNull<IntrusivePtr<Object>>,
-        NotNull<CFunction*>
+        not_null<IntrusivePtr<Object>>,
+        not_null<CFunction*>
     > v;
 
-    using CFunctionPtr = NotNull<CFunction*>;
-    using ObjectPtr = NotNull<IntrusivePtr<Object>>;
+    using CFunctionPtr = not_null<CFunction*>;
+    using ObjectPtr = not_null<IntrusivePtr<Object>>;
 
     template <typename T>
     using is_contained_type = is_one_of<T, Nil, bool, int_t, real_t, Object, CFunction>;
@@ -44,13 +44,13 @@ public:
     constexpr Value(real_t val)                 : v(val) {}
 
     // all that boilerplate is bool's fault
-    Value(NotNull<IntrusivePtr<Object>> val)    : v(val) {}
-    Value(NotNull<Object*> val)                 : v(ObjectPtr(val)) {}
+    Value(not_null<IntrusivePtr<Object>> val)   : v(val) {}
+    Value(not_null<Object*> val)                : v(ObjectPtr(val)) {}
     Value(IntrusivePtr<Object> val)             : v(ObjectPtr(val)) {}
     Value(Object* val)                          : v(ObjectPtr(val)) {}
     Value(Object& val)                          : v(ObjectPtr(&val)) {}
 
-    Value(NotNull<CFunction*> val)              : v(val) {}
+    Value(not_null<CFunction*> val)             : v(val) {}
     Value(CFunction* val)                       : v(CFunctionPtr(val)) {}
     Value(CFunction& val)                       : v(CFunctionPtr(&val)) {}
 

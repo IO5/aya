@@ -6,7 +6,13 @@
 namespace aya {
 
 template <typename T>
-using NotNull = gsl::not_null<T>;
+using not_null = gsl::not_null<T>;
+
+template <typename T, typename Deleter = std::default_delete<T>>
+using unique_ptr = std::unique_ptr<T, Deleter>;
+
+template <typename T, typename Deleter = std::default_delete<T>>
+using nn_unique_ptr = not_null<unique_ptr<T, Deleter>>;
 
 template <typename T>
 using IntrusivePtr = boost::intrusive_ptr<T>;

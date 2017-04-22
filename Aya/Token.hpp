@@ -16,7 +16,7 @@ public:
     enum Type : int {
         EOS = -1,
 
-        NL = 1 << 7, // above ASCII
+        NL = 1 << 7, // above ASCII, so there is no collisions with single char tokens
 
         IDENT,
 
@@ -40,61 +40,35 @@ public:
 
     using SemInfo = std::variant<Nil, uint_t, real_t, string_view>;
 
-    Token(Type t, const SemInfo& semInfo, int line_, int column_) : type(t), line(line_), column(column_) {
-        std::visit([this, &semInfo](auto val) { // TODO change to constexpr if
-            using T = std::decay_t<decltype(val)>;
-            assert((std::is_same_v<T, Nil>) ||
-                (std::is_same_v<T, uint_t> && type == INT) || 
-                (std::is_same_v<T, real_t> && type == REAL) || 
-                (std::is_same_v<T, string_view> && (type == IDENT || type == STRING))
-            );
-            this->storageAs<T>() = val;
-        }, semInfo);
-    }
-    Token(const Token& other) {
-        *this = other;
-    }
-    Token& operator=(const Token& other) {
-        type = other.type;
-        switch (type) {
-        case INT:
-            storageAs<uint_t>() = other.storageAs<uint_t>();
-            break;
-        case REAL:
-            storageAs<real_t>() = other.storageAs<real_t>();
-            break;
-        case IDENT:
-        case STRING:
-            storageAs<string_view>() = other.storageAs<string_view>();
-            break;
-        }
-        return *this;
+    constexpr Token(Type t, const SemInfo& info, int line_, int column_) : type(t), semInfo(info), line(line_), column(column_) {
+        assert(std::holds_alternative<Nil>(semInfo) ||
+            (std::holds_alternative<uint_t>(semInfo) && type == INT) || 
+            (std::holds_alternative<real_t>(semInfo) && type == REAL) || 
+            (std::holds_alternative<string_view>(semInfo) && (type == IDENT || type == STRING))
+        );
     }
 
-    string_view getText() const {
-        assert(type == IDENT || type == STRING);
-        return storageAs<string_view>();
+    constexpr uint_t getInt() const {
+        return std::get<uint_t>(semInfo);
     }
-    uint_t getInt() const {
-        assert(type == INT);
-        return storageAs<uint_t>();
+    constexpr real_t getReal() const {
+        return std::get<real_t>(semInfo);
     }
-    real_t getReal() const {
-        assert(type == REAL);
-        return storageAs<real_t>();
+    constexpr const string_view& getString() const {
+		return std::get<string_view>(semInfo);
     }
+    constexpr int getLine() const { return line; }
+    constexpr int getColumn() const { return column; }
 
-    int getLine() const { return line; }
-    int getColumn() const { return column; }
-
-    bool operator==(Type t) { return type == t; }
+    friend constexpr bool operator==(const Token& token, Type type) { return token.type == type; }
+    friend constexpr bool operator==(Type type, const Token& token) { return token == type; }
+    friend constexpr bool operator!=(const Token& token, Type type) { return ! (token == type); }
+    friend constexpr bool operator!=(Type type, const Token& token) { return ! (token == type); }
+	constexpr operator Type() { return type; }
 
 private:
-    template <typename T> T& storageAs() { return *reinterpret_cast<T*>(&storage); }
-    template <typename T> const T& storageAs() const { return *reinterpret_cast<const T*>(&storage); }
-
     Type type;
-    std::aligned_union_t<0, uint_t, real_t, string_view> storage;
+    SemInfo semInfo;
     int line, column;
 };
 

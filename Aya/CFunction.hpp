@@ -74,7 +74,7 @@ auto unpackStack(const gsl::span<Value>& stack) {
 }
 
 template <typename Ret, typename... Args, typename Func>
-NotNull<CFunction*> makeBind(Func&& func) {
+not_null<CFunction*> makeBind(Func&& func) {
     return new CFunction([f = std::forward<Func>(func)](gsl::span<Value>& stack) {
         assert(stack.size() == sizeof...(Args));
         auto args = detail::unpackStack<Args...>(stack);
