@@ -1,2 +1,0 @@
-C:\mingw-w64\mingw64\bin\ar.exe qc liblib.a  CMakeFiles/lib.dir/Lexer.cpp.obj CMakeFiles/lib.dir/Object.cpp.obj CMakeFiles/lib.dir/Parser.cpp.obj CMakeFiles/lib.dir/Token.cpp.obj CMakeFiles/lib.dir/Trie.cpp.obj CMakeFiles/lib.dir/main.cpp.obj
-C:\mingw-w64\mingw64\bin\ranlib.exe liblib.a
