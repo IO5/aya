@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <limits>
 
-#include <boost\lexical_cast.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "Exception.hpp"
 

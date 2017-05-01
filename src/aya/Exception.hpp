@@ -11,7 +11,7 @@ class Exception : public std::exception {
 public:
     explicit Exception(std::string_view msg_) : msg(msg_) {}
 
-    char const* what() const override {
+    char const* what() const noexcept override {
         return msg.c_str();
     }
 

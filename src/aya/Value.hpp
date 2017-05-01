@@ -35,13 +35,13 @@ private:
     static constexpr bool is_contained_type_v = is_contained_type<T>::value;
 
 public:
-    constexpr Value() {}
-    constexpr Value(Nil) {}
-    constexpr Value(bool val)                   : v(val) {}
-    constexpr Value(int_t val)                  : v(val) {}
+    Value() {}
+    Value(Nil) {}
+    Value(bool val)                   : v(val) {}
+    Value(int_t val)                  : v(val) {}
     template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
-    constexpr Value(T val)                      : v(int_t(val)) {}
-    constexpr Value(real_t val)                 : v(val) {}
+    Value(T val)                      : v(int_t(val)) {}
+    Value(real_t val)                 : v(val) {}
 
     // all that boilerplate is bool's fault
     Value(not_null<IntrusivePtr<Object>> val)   : v(val) {}
@@ -55,13 +55,13 @@ public:
     Value(CFunction& val)                       : v(CFunctionPtr(&val)) {}
 
     template <typename T>
-    constexpr bool is() const {
+    bool is() const {
         static_assert(is_contained_type_v<T>, "No such type in variant");
         return std::holds_alternative<interface_to_inner_t<T>>(v);
     }
 
     template <typename... Types>
-    constexpr bool isOneOf() const {
+    bool isOneOf() const {
         static_assert(std::conjunction_v<is_contained_type<Types>...>, "No such type in variant");
         return std::visit([](const auto& arg) {
             return is_one_of_v<
@@ -73,24 +73,24 @@ public:
     }
 
     template <typename T>
-    constexpr T& get() {
+    T& get() {
         static_assert(is_contained_type_v<T>, "No such type in variant");
         return unpack(std::get<interface_to_inner_t<T>>(v));
     }
     template <typename T>
-    constexpr const T& get() const {
+    const T& get() const {
         static_assert(is_contained_type_v<T>, "No such type in variant");
         return unpack(std::get<interface_to_inner_t<T>>(v));
     }
 
     template <typename T>
-    constexpr T* getIf() & {
+    T* getIf() & {
         static_assert(is_contained_type_v<T>, "No such type in variant");
         auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
         return ptr ? &unpack(*ptr) : nullptr;
     }
     template <typename T>
-    constexpr const T* getIf() const & {
+    const T* getIf() const & {
         static_assert(is_contained_type_v<T>, "No such type in variant");
         auto* ptr = std::get_if<interface_to_inner_t<T>>(&v);
         return ptr ? &unpack(*ptr) : nullptr;
@@ -105,14 +105,14 @@ public:
     bool operator!=(const Value& other) const { return ! (*this == other); }
 
     template <class Visitor>
-    constexpr auto visit(Visitor&& vis) {
+    auto visit(Visitor&& vis) {
         auto visitor = [v = std::forward<Visitor>(vis)](auto&& arg) {
             return v(unpack(arg));
         };
         return std::visit(visitor, v);
     }
     template <class Visitor>
-    constexpr auto visit(Visitor&& vis) const {
+    auto visit(Visitor&& vis) const {
         return std::visit([visitor = std::forward<Visitor>(vis)](auto&& arg) {
             return visitor(unpack(arg));
         }, v);
@@ -127,18 +127,18 @@ public:
 
 private:
     template <typename T> struct interface_to_inner { using type = T; };
-    template <>           struct interface_to_inner<Object> { using type = ObjectPtr; };
-    template <>           struct interface_to_inner<CFunction> { using type = CFunctionPtr; };
-    template <typename T> using  interface_to_inner_t = typename interface_to_inner<T>::type;
-
     template <typename T> struct inner_to_interface { using type = T; };
-    template <>           struct inner_to_interface<ObjectPtr> { using type = Object; };
-    template <>           struct inner_to_interface<CFunctionPtr> { using type = CFunction; };
+    template <typename T> using  interface_to_inner_t = typename interface_to_inner<T>::type;
     template <typename T> using  inner_to_interface_t = typename inner_to_interface<T>::type;
 
     static Object& unpack(const ObjectPtr& arg) { return *(arg.get().get()); }
     static CFunction& unpack(const CFunctionPtr& arg) { return *(arg.get()); }
     template <typename T> static T& unpack(T& arg) { return arg; }
 };
+
+template <> struct Value::inner_to_interface<Value::ObjectPtr> { using type = Object; };
+template <> struct Value::inner_to_interface<Value::CFunctionPtr> { using type = CFunction; };
+template <> struct Value::interface_to_inner<Object> { using type = Value::ObjectPtr; };
+template <> struct Value::interface_to_inner<CFunction> { using type = Value::CFunctionPtr; };
 
 }

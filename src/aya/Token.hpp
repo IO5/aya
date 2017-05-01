@@ -40,7 +40,8 @@ public:
 
     using SemInfo = std::variant<Nil, uint_t, real_t, string_view>;
 
-    constexpr Token(Type t, const SemInfo& info, int line_, int column_) : type(t), semInfo(info), line(line_), column(column_) {
+    // TODO rethink constexpr
+    Token(Type t, const SemInfo& info, int line_, int column_) : type(t), semInfo(info), line(line_), column(column_) {
         assert(std::holds_alternative<Nil>(semInfo) ||
             (std::holds_alternative<uint_t>(semInfo) && type == INT) || 
             (std::holds_alternative<real_t>(semInfo) && type == REAL) || 
@@ -48,23 +49,23 @@ public:
         );
     }
 
-    constexpr uint_t getInt() const {
+    uint_t getInt() const {
         return std::get<uint_t>(semInfo);
     }
-    constexpr real_t getReal() const {
+    real_t getReal() const {
         return std::get<real_t>(semInfo);
     }
-    constexpr const string_view& getString() const {
+    const string_view& getString() const {
 		return std::get<string_view>(semInfo);
     }
-    constexpr int getLine() const { return line; }
-    constexpr int getColumn() const { return column; }
+    int getLine() const { return line; }
+    int getColumn() const { return column; }
 
-    friend constexpr bool operator==(const Token& token, Type type) { return token.type == type; }
-    friend constexpr bool operator==(Type type, const Token& token) { return token == type; }
-    friend constexpr bool operator!=(const Token& token, Type type) { return ! (token == type); }
-    friend constexpr bool operator!=(Type type, const Token& token) { return ! (token == type); }
-	constexpr operator Type() { return type; }
+    friend bool operator==(const Token& token, Type type) { return token.type == type; }
+    friend bool operator==(Type type, const Token& token) { return token == type; }
+    friend bool operator!=(const Token& token, Type type) { return ! (token == type); }
+    friend bool operator!=(Type type, const Token& token) { return ! (token == type); }
+	operator Type() { return type; }
 
 private:
     Type type;

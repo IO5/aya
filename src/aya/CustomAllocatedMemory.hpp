@@ -35,8 +35,8 @@ public:
 
     void* operator new     (size_t) = delete;
     void* operator new[]   (size_t) = delete;
-    void  operator delete  (void*) = delete;
-    void  operator delete[](void*) = delete;
+    //void  operator delete  (void*) = delete;
+    //void  operator delete[](void*) = delete;
 
     friend void intrusive_ptr_add_ref(CustomAllocatedMemory* p) noexcept { ++(p->refCount); }
     friend void intrusive_ptr_release(CustomAllocatedMemory* p) noexcept {

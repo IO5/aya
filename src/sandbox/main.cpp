@@ -1,7 +1,7 @@
 #include "Value.hpp"
 #include "CFunction.hpp"
 #include "Object.hpp"
-
+/*
 #include <iostream>
 #include <memory>
 #include <boost/lexical_cast.hpp>
@@ -146,12 +146,12 @@ using BigTrie = MakeTrieFromStringList<keywords, 3>::type;
 //using aba = Trie<'a', Trie<'b', Trie<'a'>>>;
 //using bac = Trie<'b', Trie<'a', Trie<'c'>>>;
 //using BigTrie = MakeTrie_t<bac, MakeTrie_t<abc, aba>>;
-
+*/
 
 int main(int argc, const char* argv[]) {
 
 
 	//printf("%s", typeid(BigTrie).name());
 
-	return Matcher_<BigTrie>::match("aba");
+//	return Matcher_<BigTrie>::match("aba");
 }
