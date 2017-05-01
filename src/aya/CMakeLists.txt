@@ -5,3 +5,6 @@ file(GLOB_RECURSE SOURCES *.cpp)
 add_library(aya ${SOURCES})
 
 include_directories (${PROJECT_SOURCE_DIR})
+
+target_include_directories (aya PUBLIC ${PROJECT_SOURCE_DIR})
+
