@@ -10,108 +10,106 @@
 #include <array>
 #include <type_traits>
 
+namespace aya {
+
 namespace detail {
 
 template <typename... Tries>
-struct Matcher;
-template <typename TrieNode, typename... Tries>
-struct Matcher<TrieNode, Tries...> {
-	static constexpr auto match(std::string_view sv) {
-		if (auto result = TrieNode::match(sv))
-			return result;
-		return Matcher<Tries...>::match(sv);
-	}
-};
-template <>
-struct Matcher<> {
-	static constexpr auto match(std::string_view sv) {
+struct TrieList;
+// TODO maybe use optional, check if it optimizes out
+template<char_t ch, typename... Children>
+struct Trie {
+    template <typename F>
+	static constexpr auto match(const char* ptr, F&& stopCond) {
+		if (*ptr == ch)
+			return TrieList<Children...>::match(ptr + 1, std::forward<F>(stopCond));
 		return 0;
-	}
-};
-template <typename... Tries>
-struct Matcher<std::tuple<Tries...>> {
-	static constexpr auto match(std::string_view sv) {
-		return Matcher<Tries...>::match(sv);
 	}
 };
 
 template<auto result>
 struct TrieResult {
-	static constexpr auto match(std::string_view sv) {
-		return sv.empty() ? result : decltype(result)();
+    template <typename F>
+	static constexpr auto match(const char* ptr, F&& stopCond) {
+		return stopCond(ptr) ? result : 0;
 	}
 };
-
-template<char ch, typename... Children>
-struct Trie {
-	static constexpr auto match(std::string_view sv) {
-		if (!sv.empty() && sv[0] == ch)
-			return Matcher<Children...>::match(sv.substr(1));
+template <typename Head, typename... Tries>
+struct TrieList<Head, Tries...> {
+    template <typename F>
+	static constexpr auto match(const char* ptr, F&& stopCond) {
+		if (auto result = Head::match(ptr, std::forward<F>(stopCond)))
+			return result;
+		return TrieList<Tries...>::match(ptr, std::forward<F>(stopCond));
+	}
+};
+template <>
+struct TrieList<> {
+    template <typename F>
+	static constexpr auto match(const char*, F&&) {
 		return 0;
 	}
 };
 
-template <typename TrieTuple, const auto& mapping, size_t charsLeft>
-struct AddTrieToList;
+template <typename List, const auto& mapping, size_t charsLeft>
+struct add_trie_to_list;
 
 template <typename InputTrie, const auto& mapping, size_t charsLeft>
-struct TryAddToTrie {
-	using Result = InputTrie;
+struct try_add_to_trie {
+	using type = InputTrie;
 };
 
-template <char ch, typename TrieTuple>
-struct TrieFromTuple;
+template <char ch, typename TrieList>
+struct make_trie_from_list;
 template <char ch, typename... Tries>
-struct TrieFromTuple<ch, std::tuple<Tries...>> {
-	using Result = Trie<ch, Tries...>;
+struct make_trie_from_list<ch, TrieList<Tries...>> {
+	using type = Trie<ch, Tries...>;
 };
 
 template <const auto& mapping, size_t charsLeft, typename... Tries>
-struct AddTrieToList<std::tuple<Tries...>, mapping, charsLeft> {
+struct add_trie_to_list<TrieList<Tries...>, mapping, charsLeft> {
 	static constexpr auto& str = std::get<0>(mapping);
 	static constexpr char ch = str[str.size() - charsLeft];
 
-	using OriginalList = std::tuple<Tries...>;
-	using ExtendedList = std::tuple<
-		typename TryAddToTrie<Tries, mapping, charsLeft>::Result
-		...
-	>;
+	using OriginalList = TrieList<Tries...>;
+    // try add to each child
+	using ExtendedList = TrieList<
+            typename try_add_to_trie<Tries, mapping, charsLeft>::type
+            ...
+        >;
+    using NewTrie = typename make_trie_from_list<
+            ch,
+            typename add_trie_to_list<TrieList<>, mapping, charsLeft - 1>::type
+        >::type;
 
-	using Result = std::conditional_t<
-		std::is_same<OriginalList, ExtendedList>::value,
-		std::tuple<Tries...,
-			typename TrieFromTuple<ch,
-				typename AddTrieToList<
-					std::tuple<>,
-					mapping,
-					charsLeft - 1
-				>::Result
-			>::Result
-		>,
-		ExtendedList
-	>;
+    // if no one matched append new to the list 
+	using type = std::conditional_t<
+            std::is_same<OriginalList, ExtendedList>::value,
+            TrieList<Tries..., NewTrie>,
+            ExtendedList
+        >;
 };
 template <const auto& mapping, typename... Tries>
-struct AddTrieToList<std::tuple<Tries...>, mapping, 0> {
+struct add_trie_to_list<TrieList<Tries...>, mapping, 0> {
 	static constexpr auto& result = std::get<1>(mapping);
-	using Result = std::tuple<Tries..., TrieResult<result>>;
+	using type = TrieList<Tries..., TrieResult<result>>;
 };
 
 template <const auto& mapping, size_t charsLeft, char trieCh, typename... Children>
-struct TryAddToTrie<Trie<trieCh, Children...>, mapping, charsLeft> {
+struct try_add_to_trie<Trie<trieCh, Children...>, mapping, charsLeft> {
 	static constexpr auto& str = std::get<0>(mapping);
 	static constexpr char ch = str[str.size() - charsLeft];
 
-	using Result = std::conditional_t<
+	using ExtendedChildrenList = typename add_trie_to_list<
+        TrieList<Children...>,
+        mapping,
+        charsLeft - 1
+    >::type;
+
+    // if chars match, add to the trie, otherwise left unchanged
+	using type = std::conditional_t<
 		ch == trieCh,
-		typename TrieFromTuple<
-			ch,
-			typename AddTrieToList<
-				std::tuple<Children...>,
-				mapping,
-				charsLeft - 1
-			>::Result
-		>::Result,
+        typename make_trie_from_list<ch, ExtendedChildrenList>::type,
 		Trie<trieCh, Children...>
 	>;
 };
@@ -119,25 +117,30 @@ struct TryAddToTrie<Trie<trieCh, Children...>, mapping, charsLeft> {
 template <const auto& mappings, int idx>
 constexpr auto StringMapping = mappings[idx];
 
-template <typename TrieTuple, const auto& mappings, size_t idx>
-struct TrieFromStringList;
-template <const auto& mappings, size_t idx, typename... Tries>
-struct TrieFromStringList<std::tuple<Tries...>, mappings, idx> {
+template <typename List, const auto& mappings, size_t idx>
+struct make_trie_from_strings {
 	static constexpr auto& mapping = StringMapping<mappings, idx>;
-	using ExtendedList = typename AddTrieToList<
-		std::tuple<Tries...>, mapping, std::get<0>(mapping).size()
-	>::Result;
-	using Result = typename TrieFromStringList<ExtendedList, mappings, idx - 1>::Result;
+	static constexpr auto& str = std::get<0>(mapping);
+
+	using ExtendedList = typename add_trie_to_list<List, mapping, str.size()>::type;
+	using type = typename make_trie_from_strings<ExtendedList, mappings, idx - 1>::type;
 };
-template <const auto& mappings, typename... Tries>
-struct TrieFromStringList<std::tuple<Tries...>, mappings, 0> {
+template <typename List, const auto& mappings>
+struct make_trie_from_strings<List, mappings, 0> {
 	static constexpr auto& mapping = StringMapping<mappings, 0>;
-	using Result = typename AddTrieToList<
-		std::tuple<Tries...>, mapping, std::get<0>(mapping).size()
-	>::Result;
+	static constexpr auto& str = std::get<0>(mapping);
+
+	using type = typename add_trie_to_list<List, mapping, str.size()>::type;
 };
 
 }
+
+template <const auto& mappings>
+using Trie = typename detail::make_trie_from_strings<
+        detail::TrieList<>,
+        mappings,
+        sizeof(mappings)/sizeof(mappings[0]) - 1 // last index
+        >::type;
 
 constexpr std::pair<const std::string_view, int> keywords[] = {
 	{{"abc",3}, 1},
@@ -147,14 +150,16 @@ constexpr std::pair<const std::string_view, int> keywords[] = {
 	{{"abac",4}, 5}
 };
 
-using namespace detail;
+}
 
-using namespace aya;
 using namespace std;
+using namespace aya;
 
-using BigTrie = TrieFromStringList<std::tuple<>, keywords, sizeof(keywords)/sizeof(keywords[0]) - 1>::Result;
 
 int main(int argc, const char* argv[]) {
-	cout << Matcher<BigTrie>::match(argv[1]) << '\n';
+    if (argc != 2)
+        return -1;
+
+	cout << Trie<keywords>::match(argv[1], [](auto* ptr){ return !*ptr; }) << '\n';
     return 0;
 }

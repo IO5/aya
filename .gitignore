@@ -1,3 +1,5 @@
 build/
 tags
 [._]*.sw[a-p]
+src/sandbox/
+!src/sandbox/main.cpp
