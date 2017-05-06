@@ -9,6 +9,7 @@
 #include <tuple>
 #include <array>
 #include <type_traits>
+#include <optional>
 
 namespace aya {
 
@@ -16,38 +17,38 @@ namespace detail {
 
 template <typename... Tries>
 struct TrieList;
-// TODO maybe use optional, check if it optimizes out
-template<char_t ch, typename... Children>
+
+template <char_t ch, typename... Children>
 struct Trie {
-    template <typename F>
-	static constexpr auto match(const char* ptr, F&& stopCond) {
+    template <typename R, typename F>
+	static constexpr R match(const char* ptr, F&& stopCond) {
 		if (*ptr == ch)
-			return TrieList<Children...>::match(ptr + 1, std::forward<F>(stopCond));
-		return 0;
+			return TrieList<Children...>::template match<R>(ptr + 1, std::forward<F>(stopCond));
+		return R{};
 	}
 };
 
 template<auto result>
 struct TrieResult {
-    template <typename F>
-	static constexpr auto match(const char* ptr, F&& stopCond) {
-		return stopCond(ptr) ? result : 0;
+    template <typename R, typename F>
+	static constexpr R match(const char* ptr, F&& stopCond) {
+		return stopCond(ptr) ? result : R{};
 	}
 };
 template <typename Head, typename... Tries>
 struct TrieList<Head, Tries...> {
-    template <typename F>
-	static constexpr auto match(const char* ptr, F&& stopCond) {
-		if (auto result = Head::match(ptr, std::forward<F>(stopCond)))
+    template <typename R, typename F>
+	static constexpr R match(const char* ptr, F&& stopCond) {
+		if (auto result = Head::template match<R>(ptr, std::forward<F>(stopCond)))
 			return result;
-		return TrieList<Tries...>::match(ptr, std::forward<F>(stopCond));
+		return TrieList<Tries...>::template match<R>(ptr, std::forward<F>(stopCond));
 	}
 };
 template <>
 struct TrieList<> {
-    template <typename F>
-	static constexpr auto match(const char*, F&&) {
-		return 0;
+    template <typename R, typename F>
+	static constexpr R match(const char*, F&&) {
+		return R{};
 	}
 };
 
@@ -160,6 +161,7 @@ int main(int argc, const char* argv[]) {
     if (argc != 2)
         return -1;
 
-	cout << Trie<keywords>::match(argv[1], [](auto* ptr){ return !*ptr; }) << '\n';
+	auto result = Trie<keywords>::match<std::optional<int>>(argv[1], [](auto* ptr){ return !*ptr; });
+	cout << result.value_or(0) << '\n';
     return 0;
 }
