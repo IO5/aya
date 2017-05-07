@@ -1,16 +1,44 @@
 #include "Lexer.hpp"
+#include "Exception.hpp"
+#include "Trie.hpp"
+
+#include <boost/lexical_cast.hpp>
+
 #include <cassert>
 #include <cctype>
 #include <algorithm>
 #include <limits>
 
-#include <boost/lexical_cast.hpp>
-
-#include "Exception.hpp"
-
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 namespace aya {
+
+constexpr std::pair<const std::string_view, int> keywords[] = {
+    {"do"sv,     TK::DO},
+    {"end"sv,    TK::END},
+    {"if"sv,     TK::IF},
+    {"then"sv,   TK::THEN},
+    {"else"sv,   TK::ELSE},
+    {"elif"sv,   TK::ELIF},
+    {"while"sv,  TK::WHILE},
+    {"for"sv,    TK::FOR},
+    {"in"sv,     TK::IN},
+    {"repeat"sv, TK::REPEAT},
+    {"until"sv,  TK::UNTIL},
+    {"return"sv, TK::RETURN},
+    {"break"sv,  TK::BREAK},
+    {"next"sv,   TK::NEXT},
+    {"local"sv,  TK::LOCAL},
+    {"def"sv,    TK::DEF},
+    {"class"sv,  TK::CLASS},
+    {"nil"sv,    TK::NIL},
+    {"true"sv,   TK::TRUE},
+    {"false"sv,  TK::FALSE},
+    {"or"sv,     TK::OR},
+    {"and"sv,    TK::AND},
+    {"not"sv,    TK::NOT}
+};
 
 constexpr char_t operator ""_(char ch) {
     return static_cast<char_t>(ch);
@@ -309,7 +337,7 @@ real_t Lexer::readReal(const char_t* start) {
     while (isDigit(current()))
         next();
 
-    const char* end = currentPtr;
+    const char_t* end = currentPtr;
 
     return boost::lexical_cast<real_t>(start, end - start);
 }
@@ -317,24 +345,26 @@ real_t Lexer::readReal(const char_t* start) {
 Token::Type Lexer::readIdentOrKeyword() {
     assert(isAlphaOr_(current()));
 
-    const char* start = currentPtr;
+    const char_t* start = currentPtr;
 
-    int64_t intRepr = 0;
-    do {
-        intRepr <<= 8;
-        intRepr |= current();
-    } while (isAlphaOr_(next()));
+    auto stopCond = [&](const char_t* ptr) {
+        currentPtr = ptr;
+        return ! isAlphaOr_(*ptr);
+    };
+    if (auto match = Trie<keywords>::match(currentPtr, stopCond))
+        return Token::Type(match);
+    
+    while (isAlphaOr_(current()))
+        next();
 
-    // TODO keyword check
-
-    // '!' and '?' are allowed as the last character in identifier
+    // '!' and '?' are allowed as the last character in an identifier
     if (current() == '!' || current() == '?')
         next();
 
     size_t len = currentPtr - start;
     semInfo = string_view{start, len};
 
-    return TK::IDENT; //TODO
+    return TK::IDENT;
 }
 
 void Lexer::unescape() {
