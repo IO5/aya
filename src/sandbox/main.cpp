@@ -1,6 +1,7 @@
 #include "Value.hpp"
 #include "CFunction.hpp"
 #include "Object.hpp"
+#include "Token.hpp"
 
 #include <iostream>
 #include <memory>
@@ -163,12 +164,32 @@ public:
     }
 };
 
+using namespace std::literals::string_view_literals;
+
 constexpr std::pair<const std::string_view, int> keywords[] = {
-    {{"abc",3}, 1},
-    {{"aba",3}, 2},
-    {{"bac",3}, 3},
-    {{"b",1}, 4},
-    {{"abac",4}, 5}
+    {"do"sv,     TK::DO},
+    {"end"sv,    TK::END},
+    {"if"sv,     TK::IF},
+    {"then"sv,   TK::THEN},
+    {"else"sv,   TK::ELSE},
+    {"elif"sv,   TK::ELIF},
+    {"while"sv,  TK::WHILE},
+    {"for"sv,    TK::FOR},
+    {"in"sv,     TK::IN},
+    {"repeat"sv, TK::REPEAT},
+    {"until"sv,  TK::UNTIL},
+    {"return"sv, TK::RETURN},
+    {"break"sv,  TK::BREAK},
+    {"next"sv,   TK::NEXT},
+    {"local"sv,  TK::LOCAL},
+    {"def"sv,    TK::DEF},
+    {"class"sv,  TK::CLASS},
+    {"nil"sv,    TK::NIL},
+    {"true"sv,   TK::TRUE},
+    {"false"sv,  TK::FALSE},
+    {"or"sv,     TK::OR},
+    {"and"sv,    TK::AND},
+    {"not"sv,    TK::NOT}
 };
 
 }
