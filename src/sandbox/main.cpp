@@ -28,13 +28,14 @@ struct Trie {
     }
 };
 
-template<auto result>
+template <auto result>
 struct TrieResult {
     template <typename R, typename F>
     static constexpr R match(const char* ptr, F&& stopCond) {
         return stopCond(ptr) ? result : R{};
     }
 };
+
 template <typename Head, typename... Tries>
 struct TrieList<Head, Tries...> {
     template <typename R, typename F>
@@ -92,7 +93,8 @@ struct add_trie_to_list<TrieList<Tries...>, mapping, charsLeft> {
 };
 template <const auto& mapping, typename... Tries>
 struct add_trie_to_list<TrieList<Tries...>, mapping, 0> {
-    static constexpr auto& result = std::get<1>(mapping);
+    static constexpr auto result = std::get<1>(mapping);
+
     using type = TrieList<Tries..., TrieResult<result>>;
 };
 
@@ -122,6 +124,7 @@ template <typename List, const auto& mappings, size_t idx>
 struct make_trie_from_strings {
     static constexpr auto& mapping = StringMapping<mappings, idx>;
     static constexpr auto& str = std::get<0>(mapping);
+    static constexpr auto result = std::get<1>(mapping);
 
     using ExtendedList = typename add_trie_to_list<List, mapping, str.size()>::type;
     using type = typename make_trie_from_strings<ExtendedList, mappings, idx - 1>::type;
@@ -137,11 +140,24 @@ struct make_trie_from_strings<List, mappings, 0> {
 }
 
 template <const auto& mappings>
-using Trie = typename detail::make_trie_from_strings<
+class Trie {
+    using type = typename detail::make_trie_from_strings<
         detail::TrieList<>,
         mappings,
         sizeof(mappings)/sizeof(mappings[0]) - 1 // last index
         >::type;
+
+    using ResultType = std::remove_reference_t<decltype(std::get<1>(mappings[0]))>;
+
+public:
+    template <typename F>
+    static constexpr ResultType match(const char* ptr, F&& stopCond) {
+        return type::template match<ResultType>(ptr, std::forward<F>(stopCond));
+    }
+    static constexpr ResultType match(const char* ptr) {
+        return match(ptr, [](auto* ptr){ return !*ptr; });
+    }
+};
 
 constexpr std::pair<const std::string_view, int> keywords[] = {
     {{"abc",3}, 1},
@@ -161,7 +177,7 @@ int main(int argc, const char* argv[]) {
     if (argc != 2)
         return -1;
 
-    auto result = Trie<keywords>::match<std::optional<int>>(argv[1], [](auto* ptr){ return !*ptr; });
-    cout << result.value_or(0) << '\n';
+    auto result = Trie<keywords>::match(argv[1]);
+    cout << result << '\n';
     return 0;
 }
