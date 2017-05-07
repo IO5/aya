@@ -53,12 +53,22 @@ struct TrieList<> {
     }
 };
 
+template <typename T> struct is_trie_result : std::false_type {};
+template <auto _> struct is_trie_result<TrieResult<_>> : std::true_type {};
+
 template <typename List, const auto& mapping, size_t charsLeft>
 struct add_trie_to_list;
 
+template <typename InputTrie, char_t ch, const auto& mapping, size_t charsLeft>
+struct try_add_to_trie_impl {
+    using type = InputTrie;
+};
 template <typename InputTrie, const auto& mapping, size_t charsLeft>
 struct try_add_to_trie {
-    using type = InputTrie;
+    static constexpr auto& str = std::get<0>(mapping);
+    static constexpr char ch = str[str.size() - charsLeft];
+
+    using type = typename try_add_to_trie_impl<InputTrie, ch, mapping, charsLeft>::type;
 };
 
 template <char ch, typename TrieList>
@@ -95,26 +105,20 @@ template <const auto& mapping, typename... Tries>
 struct add_trie_to_list<TrieList<Tries...>, mapping, 0> {
     static constexpr auto result = std::get<1>(mapping);
 
+    static_assert(! std::disjunction_v<is_trie_result<Tries>...>, "duplicate words inside trie");
+
     using type = TrieList<Tries..., TrieResult<result>>;
 };
 
-template <const auto& mapping, size_t charsLeft, char trieCh, typename... Children>
-struct try_add_to_trie<Trie<trieCh, Children...>, mapping, charsLeft> {
-    static constexpr auto& str = std::get<0>(mapping);
-    static constexpr char ch = str[str.size() - charsLeft];
-
+template <const auto& mapping, size_t charsLeft, char ch, typename... Children>
+struct try_add_to_trie_impl<Trie<ch, Children...>, ch, mapping, charsLeft> {
     using ExtendedChildrenList = typename add_trie_to_list<
         TrieList<Children...>,
         mapping,
         charsLeft - 1
     >::type;
 
-    // if chars match, add to the trie, otherwise left unchanged
-    using type = std::conditional_t<
-        ch == trieCh,
-        typename make_trie_from_list<ch, ExtendedChildrenList>::type,
-        Trie<trieCh, Children...>
-    >;
+    using type = typename make_trie_from_list<ch, ExtendedChildrenList>::type;
 };
 
 template <const auto& mappings, int idx>
