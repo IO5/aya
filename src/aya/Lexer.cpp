@@ -348,7 +348,6 @@ Token::Type Lexer::readIdentOrKeyword() {
     const char_t* start = currentPtr;
 
     auto stopCond = [&](const char_t* ptr) {
-        currentPtr = ptr;
         return ! isAlphaOr_(*ptr);
     };
     if (auto match = Trie<keywords>::match(currentPtr, stopCond))

@@ -14,9 +14,9 @@ struct TrieList;
 template <char_t ch, typename... Children>
 struct Trie {
     template <typename R, typename F>
-    static constexpr R match(const char_t* ptr, F&& stopCond) {
+    static constexpr R match(const char_t*& ptr, F&& stopCond) {
         if (*ptr == ch)
-            return TrieList<Children...>::template match<R>(ptr + 1, std::forward<F>(stopCond));
+            return TrieList<Children...>::template match<R>(++ptr, std::forward<F>(stopCond));
         return R{};
     }
 };
@@ -24,7 +24,7 @@ struct Trie {
 template <auto result>
 struct TrieResult {
     template <typename R, typename F>
-    static constexpr R match(const char_t* ptr, F&& stopCond) {
+    static constexpr R match(const char_t*& ptr, F&& stopCond) {
         return stopCond(ptr) ? result : R{};
     }
 };
@@ -32,7 +32,7 @@ struct TrieResult {
 template <typename Head, typename... Tries>
 struct TrieList<Head, Tries...> {
     template <typename R, typename F>
-    static constexpr R match(const char_t* ptr, F&& stopCond) {
+    static constexpr R match(const char_t*& ptr, F&& stopCond) {
         if (auto result = Head::template match<R>(ptr, std::forward<F>(stopCond)))
             return result;
         return TrieList<Tries...>::template match<R>(ptr, std::forward<F>(stopCond));
@@ -41,7 +41,7 @@ struct TrieList<Head, Tries...> {
 template <>
 struct TrieList<> {
     template <typename R, typename F>
-    static constexpr R match(const char_t*, F&&) {
+    static constexpr R match(const char_t*&, F&&) {
         return R{};
     }
 };
@@ -148,10 +148,10 @@ class Trie {
 
 public:
     template <typename F>
-    static constexpr ResultType match(const char_t* ptr, F&& stopCond) {
+    static constexpr ResultType match(const char_t*& ptr, F&& stopCond) {
         return type::template match<ResultType>(ptr, std::forward<F>(stopCond));
     }
-    static constexpr ResultType match(const char_t* ptr) {
+    static constexpr ResultType match(const char_t*& ptr) {
         return match(ptr, [](auto* ptr){ return !*ptr; });
     }
 };
