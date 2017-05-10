@@ -12,3 +12,5 @@ target_link_libraries(tests ${GTEST_BOTH_LIBRARIES} aya)
 
 gtest_add_tests(tests "" ${HEADERS})
 
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++1z -O0 -g -ggdb -D_DEBUG")
+

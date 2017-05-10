@@ -40,15 +40,17 @@ public:
 
     using SemInfo = std::variant<Nil, uint_t, real_t, string_view>;
 
-    // TODO rethink constexpr
-    Token(Type t, const SemInfo& info, int line_, int column_) : type(t), semInfo(info), line(line_), column(column_) {
-        assert(std::holds_alternative<Nil>(semInfo) ||
-            (std::holds_alternative<uint_t>(semInfo) && type == INT) || 
-            (std::holds_alternative<real_t>(semInfo) && type == REAL) || 
-            (std::holds_alternative<string_view>(semInfo) && (type == IDENT || type == STRING))
-        );
+    Token(Type t, const SemInfo& info, int line_, int column_) : type(t), line(line_), column(column_) {
+        if (type == INT) {
+            semInfo = std::get<uint_t>(info);
+        } else if (type == REAL) {
+            semInfo = std::get<real_t>(info);
+        } else if (type == IDENT || type == STRING) {
+            semInfo = std::get<string_view>(info);
+        }
     }
 
+    // TODO maybe use aligned_storage after all
     uint_t getInt() const {
         return std::get<uint_t>(semInfo);
     }
@@ -60,6 +62,7 @@ public:
     }
     int getLine() const { return line; }
     int getColumn() const { return column; }
+    auto getLineInfo() const { return std::make_pair(line, column); }
 
     friend bool operator==(const Token& token, Type type) { return token.type == type; }
     friend bool operator==(Type type, const Token& token) { return token == type; }

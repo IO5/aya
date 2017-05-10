@@ -4,10 +4,11 @@
 #include "Exception.hpp"
 
 #include <gtest/gtest.h>
+#include <sstream>
 
 using namespace aya;
 
-TEST(inputBufferSanity, lexerTest) {
+TEST(lexerTest, inputBufferSanity) {
     EXPECT_THROW(Lexer lexer(nullptr), Exception);
     EXPECT_THROW(Lexer lexer({}), Exception);
     EXPECT_THROW(Lexer lexer({"abc", int(0)}), Exception);
@@ -17,26 +18,27 @@ TEST(inputBufferSanity, lexerTest) {
     EXPECT_NO_THROW(Lexer lexer("abc"));
 }
 
-//TEST(emptyAndIgnoredInput, lexerTest) {
-    //EXPECT_EQ(Lexer("").nextToken(), TK::EOS);
-    //EXPECT_EQ(Lexer("  \v  \t   \v\t ").nextToken(), TK::EOS);
-    //EXPECT_EQ(Lexer("# comment only ").nextToken(), TK::EOS);
-//}
+TEST(lexerTest, emptyAndIgnoredInput) {
+    EXPECT_EQ(Lexer("").nextToken(), TK::EOS);
+    EXPECT_EQ(Lexer("  \v  \t   \v\t ").nextToken(), TK::EOS);
+    EXPECT_EQ(Lexer("# comment only ").nextToken(), TK::EOS);
+}
 
-//TEST(basicIntegers, lexerTest) {
-    //const char input[] = "0 1 12 23456 "
-                   //"0 00 01 0012 023456 0000 "
-                   //"0x0 0X1 0xa9 0xabcdef 0X0fAb001";
-    //Lexer lexer(input);
-    //stringstream ss(input);
-    //ss << setbase(0);
-    //int_t ssInt;
-    //while (ss >> ssInt) {
-        //EXPECT_EQ(lexer.nextToken(), TK::INT);
-        //EXPECT_EQ(lexer.getSemInfo().getInt(), ssInt);
-    //}
-    //ASSERT_EQ(lexer.nextToken(), TK::EOS);
-//}
+TEST(lexerTest, basicIntegers) {
+    const char input[] = "0 1 12 23456 "
+                   "0 00 01 0012 023456 0000 "
+                   "0x0 0X1 0xa9 0xabcdef 0X0fAb001";
+    Lexer lexer(input);
+    std::stringstream ss(input);
+    ss << std::setbase(0);
+    int_t ssInt;
+    while (ss >> ssInt) {
+        auto token = lexer.nextToken();
+        ASSERT_EQ(token, TK::INT);
+        EXPECT_EQ(token.getInt(), ssInt);
+    }
+    ASSERT_EQ(lexer.nextToken(), TK::EOS);
+}
 
 //TEST(invalidIntegers, lexerTest) {
     //EXPECT_THROW(Lexer("99999999999999999").nextToken(), SyntaxError);

@@ -50,6 +50,7 @@ Lexer::Lexer(gsl::span<const char_t> inputBuffer_, string_view inputName_) :
     inputName(inputName_),
     line(1),
     column(1) {
+
     if (inputBuffer.size() == 0)
         throw Exception("input buffer is empty");
     if (inputBuffer.data()[inputBuffer.size() - 1] != 0)
@@ -303,9 +304,9 @@ uint_t Lexer::readInteger() {
     while (isDigit<base>(current())) {
         uint_t oldRes = res;
         res = base * res + charDigitToInt<base>(current());
-		constexpr auto Max_Int = static_cast<uint_t>(std::numeric_limits<int_t>::max());
+        constexpr auto Max_Int = static_cast<uint_t>(std::numeric_limits<int_t>::max());
         // wrap around or number bigger than max_int + 1 (it can be actually min_int if is's preceded by unary minus)
-        if (oldRes != res / base || res - 1 > Max_Int)
+        if (oldRes != res / base || res > Max_Int + 1)
             error("integer constant too big");
         next();
     }
