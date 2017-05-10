@@ -51,6 +51,9 @@ public:
     }
 
     // TODO maybe use aligned_storage after all
+    Type getType() const {
+        return type;
+    }
     uint_t getInt() const {
         return std::get<uint_t>(semInfo);
     }
@@ -68,7 +71,7 @@ public:
     friend bool operator==(Type type, const Token& token) { return token == type; }
     friend bool operator!=(const Token& token, Type type) { return ! (token == type); }
     friend bool operator!=(Type type, const Token& token) { return ! (token == type); }
-	operator Type() { return type; }
+    operator Type() { return type; }
 
 private:
     Type type;
@@ -84,6 +87,22 @@ constexpr Token::Type operator ""_tk(char ch) {
 
 #ifdef _DEBUG
 string_view toString(Token::Type token);
+string_t toString(const Token& token);
 #endif
 
 }
+
+// gtest
+#ifdef _DEBUG
+#include <iostream>
+
+namespace aya {
+inline void PrintTo(Token::Type token, std::ostream* out) {
+    *out << toString(token);
+}
+inline void PrintTo(const aya::Token& token, std::ostream* out) {
+    *out << toString(token);
+}
+
+}
+#endif

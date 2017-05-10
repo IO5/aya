@@ -53,5 +53,24 @@ string_view toString(Token::Type token) {
     }
 }
 
+string_t toString(const Token& token) {
+    string_t result(toString(token.getType()));
+    switch (token.getType()) {
+    case TK::INT:
+        result += '(' + std::to_string(token.getInt()) + ')';
+        break;
+    case TK::REAL:
+        result += '(' + std::to_string(token.getReal()) + ')';
+        break;
+    case TK::STRING:
+    case TK::IDENT:
+        result += '(' + std::string(token.getString()) + ')';
+        break;
+    default:
+        ;
+    }
+    return result;
+}
+
 }
 #endif
