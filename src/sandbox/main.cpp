@@ -5,7 +5,9 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/string.hpp>
 #include <boost/hana/adjust_if.hpp>
+#include <boost/hana/transform.hpp>
 #include <boost/hana/drop_front_exactly.hpp>
+#include <boost/hana/append.hpp>
 #include <boost/hana/front.hpp>
 #include <boost/hana/equal.hpp>
 #include <string_view>
@@ -70,17 +72,18 @@ constexpr auto addStringToList(bh::tuple<Nodes...> list, String string, Result r
     if constexpr (bh::is_empty(string)) {
         return list;
     } else {
-        auto stringTail = bh::drop_front_exactly(string);
-        auto chMatches = [=](auto trie) { 
-            return bh::front(string) == trie.ch;
-        };
-        auto extendedList = bh::adjust_if(list, chMatches, [=](auto node) {
-            return addStringToNode(node, stringTail, result);
+        auto stringTail = bh::drop_front_exactly(String{});
+        auto extendedList = bh::transform(list, [=](auto node) constexpr {
+            if constexpr (bh::front(String{}) == decltype(node)::ch) {
+                return addStringToNode(node, stringTail, result);
+            } else {
+                return node;
+            }
         });
-        if (extendedList == list) {
-            auto emptyNode = makeNode(bh::front(string), noMatch_c, bh::make_tuple()); 
+        if constexpr (extendedList == list) {
+            auto emptyNode = makeNode(char_c<bh::front(string)>, noMatch_c, bh::make_tuple()); 
             auto newNode = addStringToNode(emptyNode, stringTail, result);
-            return list;
+            return bh::append(list, newNode);
         } else {
             return extendedList;
         }
@@ -127,6 +130,5 @@ namespace bh = boost::hana;
 int main(int argc, const char* argv[]) {
     (void)argc; (void)argv;
     constexpr auto res = detail::addStringToList(bh::make_tuple(detail::Node<'e', 23>{}), BOOST_HANA_STRING("abc"), bh::int_c<23>);
-    detail::result_c<23ul>;
     return 0;
 }
