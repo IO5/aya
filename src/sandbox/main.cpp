@@ -5,10 +5,12 @@
 #include <boost/hana/tuple.hpp>
 #include <boost/hana/string.hpp>
 #include <boost/hana/adjust_if.hpp>
+#include <boost/hana/drop_front_exactly.hpp>
 #include <boost/hana/front.hpp>
 #include <boost/hana/equal.hpp>
 #include <string_view>
 #include <type_traits>
+#include <cstdint>
 
 namespace aya {
 
@@ -25,6 +27,8 @@ template <auto result>
 using result_ = bh::integral_constant<decltype(result), result>;
 template <auto result>
 constexpr result_<result> result_c{};
+
+constexpr bh::integral_constant<int8_t, 0> noMatch_c{};
 
 template <char_t Ch, auto Result, typename... Children>
 struct Node {
@@ -43,11 +47,22 @@ constexpr auto makeNode(char_<ch>, result_<result>, bh::tuple<Children...>) {
     return Node<ch, result, Children...>{};
 }
 
+template <typename String, typename Result, typename... Nodes>
+constexpr auto addStringToList(bh::tuple<Nodes...> list, String string, Result result);
+
 template <typename Node, typename String, typename Result>
 constexpr auto addStringToNode(Node node, String string, Result result) {
-    auto extendedChildren = addStringToList(node.children, string, result);
+    // at last charcter -> set result
+    if constexpr (bh::is_empty(string)) {
+        // result already set -> duplicate match
+        static_assert(node.result == 0, "duplicate entry inside the trie");
 
-    return makeNode(char_c<node.ch>, result_c<node.result>, extendedChildren);
+        return makeNode(char_c<node.ch>, result, node.children);
+    } else {
+        auto extendedChildren = addStringToList(node.children, string, result);
+
+        return makeNode(char_c<node.ch>, result_c<node.result>, extendedChildren);
+    }
 }
 
 template <typename String, typename Result, typename... Nodes>
@@ -55,16 +70,19 @@ constexpr auto addStringToList(bh::tuple<Nodes...> list, String string, Result r
     if constexpr (bh::is_empty(string)) {
         return list;
     } else {
+        auto stringTail = bh::drop_front_exactly(string);
         auto chMatches = [=](auto trie) { 
             return bh::front(string) == trie.ch;
         };
-        auto extendedList = bh::adjust_if(list, chMatches, [](auto trie) {
-            return trie;
+        auto extendedList = bh::adjust_if(list, chMatches, [=](auto node) {
+            return addStringToNode(node, stringTail, result);
         });
         if (extendedList == list) {
+            auto emptyNode = makeNode(bh::front(string), noMatch_c, bh::make_tuple()); 
+            auto newNode = addStringToNode(emptyNode, stringTail, result);
             return list;
         } else {
-            return list;
+            return extendedList;
         }
     }
 }
