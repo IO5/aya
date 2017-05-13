@@ -1,4 +1,5 @@
-#include "Token.hpp"
+//#include "Token.hpp"
+using char_t = char;
 
 #include <iostream>
 #include <boost/hana/type.hpp>
@@ -13,6 +14,7 @@
 #include <string_view>
 #include <type_traits>
 #include <cstdint>
+
 
 namespace aya {
 
@@ -30,7 +32,8 @@ using result_ = bh::integral_constant<decltype(result), result>;
 template <auto result>
 constexpr result_<result> result_c{};
 
-constexpr bh::integral_constant<int8_t, 0> noMatch_c{};
+template <typename T>
+constexpr bh::integral_constant<int, 0> noMatch_c{};
 
 template <char_t Ch, auto Result, typename... Children>
 struct Node {
@@ -69,19 +72,24 @@ constexpr auto addStringToNode(Node node, String string, Result result) {
 
 template <typename String, typename Result, typename... Nodes>
 constexpr auto addStringToList(bh::tuple<Nodes...> list, String string, Result result) {
+    // false positives on unused variable
     if constexpr (bh::is_empty(string)) {
+        (void)result;
         return list;
     } else {
-        auto stringTail = bh::drop_front_exactly(String{});
-        auto extendedList = bh::transform(list, [=](auto node) constexpr {
-            if constexpr (bh::front(String{}) == decltype(node)::ch) {
+        auto stringTail = bh::drop_front_exactly(string);
+        // if i use string instead of String{} I get internal compiler error lel
+        constexpr char ch = bh::front(String{}).value;
+        (void)ch;
+        auto extendedList = bh::transform(list, [&](auto node) constexpr { 
+            if constexpr (node.ch == ch) {
                 return addStringToNode(node, stringTail, result);
             } else {
                 return node;
             }
         });
         if constexpr (extendedList == list) {
-            auto emptyNode = makeNode(char_c<bh::front(string)>, noMatch_c, bh::make_tuple()); 
+            auto emptyNode = makeNode(char_c<bh::front(string)>, noMatch_c<Result>, bh::make_tuple()); 
             auto newNode = addStringToNode(emptyNode, stringTail, result);
             return bh::append(list, newNode);
         } else {
@@ -90,35 +98,57 @@ constexpr auto addStringToList(bh::tuple<Nodes...> list, String string, Result r
     }
 }
 
+template <typename... Nodes>
+constexpr auto match(bh::tuple<Nodes...> list, const char_t* str) {
+    if constexpr (bh::is_empty(list)) {
+        (void)str;
+        return 0;
+    } else {
+        auto head = bh::front(list);
+        if (*str == head.ch) {
+            return match(head, str);
+        }
+        return match(bh::drop_front_exactly(list), str);
+    }
+}
+template <typename Node>
+constexpr auto match(Node node, const char_t* str) {
+    if (auto result = match(node.children, str+1)) {
+        return result;
+    } else {
+        return node.result;
+    }
 }
 
-using namespace std::literals::string_view_literals;
+}
 
-constexpr std::pair<const std::string_view, int> keywords[] = {
-    {"do"sv,     TK::DO},
-    {"end"sv,    TK::END},
-    {"if"sv,     TK::IF},
-    {"then"sv,   TK::THEN},
-    {"else"sv,   TK::ELSE},
-    {"elif"sv,   TK::ELIF},
-    {"while"sv,  TK::WHILE},
-    {"for"sv,    TK::FOR},
-    {"in"sv,     TK::IN},
-    {"repeat"sv, TK::REPEAT},
-    {"until"sv,  TK::UNTIL},
-    {"return"sv, TK::RETURN},
-    {"break"sv,  TK::BREAK},
-    {"next"sv,   TK::NEXT},
-    {"local"sv,  TK::LOCAL},
-    {"def"sv,    TK::DEF},
-    {"class"sv,  TK::CLASS},
-    {"nil"sv,    TK::NIL},
-    {"true"sv,   TK::TRUE},
-    {"false"sv,  TK::FALSE},
-    {"or"sv,     TK::OR},
-    {"and"sv,    TK::AND},
-    {"not"sv,    TK::NOT}
-};
+//using namespace std::literals::string_view_literals;
+
+//constexpr std::pair<const std::string_view, int> keywords[] = {
+    //{"do"sv,     TK::DO},
+    //{"end"sv,    TK::END},
+    //{"if"sv,     TK::IF},
+    //{"then"sv,   TK::THEN},
+    //{"else"sv,   TK::ELSE},
+    //{"elif"sv,   TK::ELIF},
+    //{"while"sv,  TK::WHILE},
+    //{"for"sv,    TK::FOR},
+    //{"in"sv,     TK::IN},
+    //{"repeat"sv, TK::REPEAT},
+    //{"until"sv,  TK::UNTIL},
+    //{"return"sv, TK::RETURN},
+    //{"break"sv,  TK::BREAK},
+    //{"next"sv,   TK::NEXT},
+    //{"local"sv,  TK::LOCAL},
+    //{"def"sv,    TK::DEF},
+    //{"class"sv,  TK::CLASS},
+    //{"nil"sv,    TK::NIL},
+    //{"true"sv,   TK::TRUE},
+    //{"false"sv,  TK::FALSE},
+    //{"or"sv,     TK::OR},
+    //{"and"sv,    TK::AND},
+    //{"not"sv,    TK::NOT}
+//};
 
 }
 
@@ -127,8 +157,19 @@ using namespace aya;
 
 namespace bh = boost::hana;
 
+using Trie1 = decltype(detail::addStringToList(bh::make_tuple(), bh::string_c<'a','b','c'>,     bh::int_c<1>));
+using Trie2 = decltype(detail::addStringToList(Trie1{},          bh::string_c<'a','b','a'>,     bh::int_c<2>));
+using Trie3 = decltype(detail::addStringToList(Trie2{},          bh::string_c<'b','a','c'>,     bh::int_c<3>));
+using Trie4 = decltype(detail::addStringToList(Trie3{},          bh::string_c<'b'>,             bh::int_c<4>));
+using Trie5 = decltype(detail::addStringToList(Trie4{},          bh::string_c<'a','b','a','c'>, bh::int_c<5>));
+
+template <typename T>
+void print(T& t) {
+    static_assert(t == false);
+}
+
 int main(int argc, const char* argv[]) {
-    (void)argc; (void)argv;
-    constexpr auto res = detail::addStringToList(bh::make_tuple(detail::Node<'e', 23>{}), BOOST_HANA_STRING("abc"), bh::int_c<23>);
-    return 0;
+    if (argc != 2)
+        return -1;
+    return match(Trie5{}, argv[1]);
 }
